@@ -5,15 +5,16 @@ import Scoreboard from './Scoreboard';
 import axios from 'axios';
 import clickSound from "../assets/click.mp3";
 import gameOverSound from "../assets/game-over.mp3";
+import victorySound from "../assets/victory.mp3"; // Add victory sound
 
 const sounds = {
     click: new Howl({ src: [clickSound] }),
-    gameOver: new Howl({ src: [gameOverSound] })
+    gameOver: new Howl({ src: [gameOverSound] }),
+    victory: new Howl({ src: [victorySound] }) // Add victory sound to sounds object
 }
 
 const playSound = (soundName) => {
   if (sounds[soundName]) {
-    sounds[soundName].currentTime = 0; // Reset to start
     sounds[soundName].play();
   }
 };
@@ -29,13 +30,14 @@ export default function Game() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [showVictory, setShowVictory] = useState(false); // Add state for victory
 
   useEffect(() => {
     const loadPokemon = async () => {
       try {
-        const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=10');
+        const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=20');
         const pokemonList = await Promise.all(
-          response.data.results.slice(0, 50).map(async (pokemon) => {
+          response.data.results.slice(0, 20).map(async (pokemon) => { 
             const details = await axios.get(pokemon.url);
             return {
               id: details.data.id,
@@ -60,51 +62,71 @@ export default function Game() {
     if (!arrayToShuffle.length) return;
     
     const shuffled = [...arrayToShuffle]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 5);
+      .sort(() => Math.random() - 0.6)
+      .slice(0, 6);
     setCurrentPokemon(shuffled);
   };
 
   const handleCardClick = (id) => {
-    if (showGameOver) return;
+    if (showGameOver || showVictory) return;
 
     playSound("click");
     
     if (clickedIds.includes(id)) {
-        playSound("gameOver");
+      playSound("gameOver");
       if (score > bestScore) {
         setBestScore(score);
         localStorage.setItem('bestScore', score);
       }
-        setShowGameOver(true);
-      //setClickedIds([]);
-      //setScore(0);
+      setShowGameOver(true);
     } else {
-      setClickedIds([...clickedIds, id]);
-      setScore(score + 1);
-      setTimeout(shuffleCards, 300)
+      const newClickedIds = [...clickedIds, id];
+      const newScore = score + 1;
+    
+    if (newScore === 20) { 
+      playSound("victory");
+      setShowVictory(true);
+      if (newScore > bestScore) {
+        setBestScore(newScore);
+        localStorage.setItem('bestScore', newScore);
+      }
     }
-  };
+    
+    setClickedIds(newClickedIds);
+    setScore(newScore);
+    setTimeout(shuffleCards, 300);
+  }
+};
 
   const restartGame = () => {
     setClickedIds([]);
     setScore(0);
     setShowGameOver(false);
+    setShowVictory(false); // Reset victory state
     shuffleCards();
   }
 
   return (
     <div className="game-container">
-        {showGameOver && (
-            <div className="game-over-modal">
-                <div className='modal-content'>
-                    <h2>Game Over!</h2>
-                    <p>Final Score: {score}</p>
-                    <p>Best Score: {bestScore}</p>
-                    <button onClick={restartGame}>Play Again</button>
-                </div>
-            </div>
-        )}
+      {showGameOver && (
+        <div className="game-over-modal">
+          <div className='modal-content'>
+            <h2>Game Over!</h2>
+            <p>Final Score: {score}</p>
+            <p>Best Score: {bestScore}</p>
+            <button onClick={restartGame}>Play Again</button>
+          </div>
+        </div>
+      )}
+      {showVictory && (
+        <div className="victory-modal">
+          <div className='modal-content'>
+            <h2>Victory!</h2>
+            <p>Congratulations, you won!</p>
+            <button onClick={restartGame}>Play Again</button>
+          </div>
+        </div>
+      )}
       <Scoreboard score={score} bestScore={bestScore} />
       
       {error ? (

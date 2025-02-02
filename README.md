@@ -16,7 +16,7 @@ Test your memory skills with Pokémon characters! Match cards without repeating 
   - 🔴 Hard: 
 - 🏆 Score tracking with best score persistence
 - 🎮 Responsive design for all screen sizes
-- 🎵 Sound effects for card clicks and game over
+- 🎵 Sound effects for card clicks, game over and victory
 - 🎮 Interactive game over modal with restart option
 - 🔄 Dynamic card shuffling mechanics
 - 📱 Mobile-friendly interface
