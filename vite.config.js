@@ -8,4 +8,4 @@ export default defineConfig({
   define: {
     __APP_TITLE__: JSON.stringify('Pokemon Memory Game'),
   },
-})
+});
